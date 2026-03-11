@@ -10,6 +10,7 @@ import Sales from './pages/Sales';
 import Records from './pages/Records';
 import Reports from './pages/Reports';
 import Products from './pages/Products';
+import.meta.env.VITE_API_URL
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
