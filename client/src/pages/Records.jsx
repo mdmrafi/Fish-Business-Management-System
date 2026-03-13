@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { exportToExcel } from '../utils/exportExcel';
 import { HiSearch, HiCalendar, HiDownload, HiTrash, HiPencil } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
 
 const Records = () => {
   const [purchases, setPurchases] = useState([]);
@@ -12,6 +13,9 @@ const Records = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+
+  const { admin } = useAuth();
+  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchData(); }, []);
 
@@ -127,7 +131,7 @@ const Records = () => {
                 <td className="px-5 py-3 text-sm text-right text-slate-700">{(p.items || []).length}</td>
                 <td className="px-5 py-3 text-sm text-right font-bold text-blue-700">৳{p.totalExpense?.toLocaleString()}</td>
                 <td className="px-5 py-3 text-center">
-                  <button onClick={() => handleDeletePurchase(p._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><HiTrash className="w-4 h-4" /></button>
+                  {canEditDelete && <button onClick={() => handleDeletePurchase(p._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><HiTrash className="w-4 h-4" /></button>}
                 </td>
               </tr>
             ))}
@@ -139,7 +143,7 @@ const Records = () => {
                 <td className="px-5 py-3 text-sm text-right text-slate-700">{(s.items || []).length}</td>
                 <td className="px-5 py-3 text-sm text-right font-bold text-emerald-700">৳{s.totalSale?.toLocaleString()}</td>
                 <td className="px-5 py-3 text-center">
-                  <button onClick={() => handleDeleteSale(s._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><HiTrash className="w-4 h-4" /></button>
+                  {canEditDelete && <button onClick={() => handleDeleteSale(s._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><HiTrash className="w-4 h-4" /></button>}
                 </td>
               </tr>
             ))}
@@ -163,7 +167,7 @@ const Records = () => {
                 <h3 className="font-semibold text-slate-800 mt-1">{(p.items || []).map(it => it.productName).join(', ')}</h3>
                 <p className="text-xs text-slate-400">{new Date(p.date).toLocaleDateString()}</p>
               </div>
-              <button onClick={() => handleDeletePurchase(p._id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><HiTrash className="w-4 h-4" /></button>
+              {canEditDelete && <button onClick={() => handleDeletePurchase(p._id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><HiTrash className="w-4 h-4" /></button>}
             </div>
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="bg-slate-50 rounded-lg p-2"><p className="text-xs text-slate-400">Items</p><p className="font-bold text-sm">{(p.items || []).length}</p></div>
@@ -179,7 +183,7 @@ const Records = () => {
                 <h3 className="font-semibold text-slate-800 mt-1">{(s.items || []).map(it => it.productName).join(', ')}</h3>
                 <p className="text-xs text-slate-400">{new Date(s.date).toLocaleDateString()}</p>
               </div>
-              <button onClick={() => handleDeleteSale(s._id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><HiTrash className="w-4 h-4" /></button>
+              {canEditDelete && <button onClick={() => handleDeleteSale(s._id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><HiTrash className="w-4 h-4" /></button>}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-slate-50 rounded-lg p-2"><p className="text-xs text-slate-400">Items</p><p className="font-bold text-sm">{(s.items || []).length}</p></div>

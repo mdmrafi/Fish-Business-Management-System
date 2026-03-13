@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import { HiPlus, HiTrash, HiPencil, HiX } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
 
 /* ── Writable product picker (datalist-style) ────────────── */
 const ProductInput = ({ value, onChange, products }) => {
@@ -62,6 +63,9 @@ const Purchases = () => {
   const [form, setForm] = useState(emptyForm());
   const [customName, setCustomName] = useState('');
   const [customAmount, setCustomAmount] = useState('');
+
+  const { admin } = useAuth();
+  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchData(); }, []);
 
@@ -317,14 +321,16 @@ const Purchases = () => {
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">{new Date(purchase.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => handleEdit(purchase)} className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
-                    <HiPencil className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDelete(purchase._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <HiTrash className="w-4 h-4" />
-                  </button>
-                </div>
+                {canEditDelete && (
+                  <div className="flex gap-1">
+                    <button onClick={() => handleEdit(purchase)} className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
+                      <HiPencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(purchase._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Per-item breakdown */}

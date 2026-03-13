@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import { HiPlus, HiTrash, HiPencil } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,9 @@ const Products = () => {
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const { admin } = useAuth();
+  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -90,16 +94,18 @@ const Products = () => {
                 <div className="w-10 h-10 rounded-xl bg-ocean-50 flex items-center justify-center text-lg">🐟</div>
                 <span className="font-medium text-slate-700">{product.name}</span>
               </div>
-              <div className="flex gap-1">
-                <button onClick={() => { setName(product.name); setEditingId(product._id); setShowForm(true); }}
-                  className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
-                  <HiPencil className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(product._id)}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                  <HiTrash className="w-4 h-4" />
-                </button>
-              </div>
+              {canEditDelete && (
+                <div className="flex gap-1">
+                  <button onClick={() => { setName(product.name); setEditingId(product._id); setShowForm(true); }}
+                    className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
+                    <HiPencil className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(product._id)}
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <HiTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

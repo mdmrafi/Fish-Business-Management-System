@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import { HiPlus, HiTrash, HiPencil, HiX } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
 
 const ALL_ITEMS_NAME = 'All Items';
 
@@ -66,6 +67,9 @@ const Sales = () => {
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm());
+
+  const { admin } = useAuth();
+  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchData(); }, []);
 
@@ -319,14 +323,16 @@ const Sales = () => {
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">{new Date(sale.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-                <div className="flex gap-1">
-                  <button onClick={() => handleEdit(sale)} className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
-                    <HiPencil className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDelete(sale._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <HiTrash className="w-4 h-4" />
-                  </button>
-                </div>
+                {canEditDelete && (
+                  <div className="flex gap-1">
+                    <button onClick={() => handleEdit(sale)} className="p-2 text-slate-400 hover:text-ocean-600 hover:bg-ocean-50 rounded-lg transition-colors">
+                      <HiPencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(sale._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Per-item breakdown */}
