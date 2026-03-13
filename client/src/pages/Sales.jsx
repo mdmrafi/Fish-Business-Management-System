@@ -5,6 +5,10 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Modal from '../components/Modal';
 import { HiPlus, HiTrash, HiPencil, HiX } from 'react-icons/hi';
 
+const ALL_ITEMS_NAME = 'All Items';
+
+const isAllItemsSelection = (name = '') => /^all items?$/i.test(name.trim());
+
 /* ── Writable product picker ─────────────────────────────── */
 const ProductInput = ({ value, onChange, products }) => {
   const [open, setOpen] = useState(false);
@@ -12,7 +16,9 @@ const ProductInput = ({ value, onChange, products }) => {
 
   useEffect(() => { setSearch(value); }, [value]);
 
-  const filtered = products.filter(p =>
+  const normalizedProducts = products.filter(p => !isAllItemsSelection(p.name));
+  const allOptions = [{ _id: 'all-items', name: ALL_ITEMS_NAME }, ...normalizedProducts];
+  const filtered = allOptions.filter(p =>
     p.name.toLowerCase().includes((search || '').toLowerCase())
   );
 
@@ -88,8 +94,14 @@ const Sales = () => {
   };
 
   /* ── Calculations ── */
-  const totalSale = () => form.items.reduce((s, it) =>
-    s + ((parseFloat(it.quantitySold) || 0) * (parseFloat(it.pricePerKg) || 0) - (parseFloat(it.commission) || 0)), 0);
+  const itemSubtotal = (it) => {
+    if (isAllItemsSelection(it.productName)) {
+      return (parseFloat(it.pricePerKg) || 0) - (parseFloat(it.commission) || 0);
+    }
+    return ((parseFloat(it.quantitySold) || 0) * (parseFloat(it.pricePerKg) || 0)) - (parseFloat(it.commission) || 0);
+  };
+
+  const totalSale = () => form.items.reduce((s, it) => s + itemSubtotal(it), 0);
   const profitLoss = () => totalSale() - (parseFloat(form.purchaseCost) || 0);
 
   /* ── Purchase link ── */
@@ -102,8 +114,13 @@ const Sales = () => {
   /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const valid = form.items.every(it => it.productName && it.quantitySold && it.pricePerKg);
-    if (!valid) { toast.error('Each item needs product, quantity and price'); return; }
+    const valid = form.items.every(it => {
+      if (!it.productName) return false;
+      if (isAllItemsSelection(it.productName)) return !!it.pricePerKg;
+      if (!it.quantitySold) return false;
+      return !!it.pricePerKg;
+    });
+    if (!valid) { toast.error('Each item needs product and price. Non-All Items also need quantity.'); return; }
     setSubmitting(true);
     try {
       const payload = {
@@ -111,7 +128,7 @@ const Sales = () => {
         items: form.items.map(it => ({
           productName: it.productName.trim(),
           product: it.product || undefined,
-          quantitySold: parseFloat(it.quantitySold),
+          quantitySold: isAllItemsSelection(it.productName) ? 1 : parseFloat(it.quantitySold),
           pricePerKg: parseFloat(it.pricePerKg),
           commission: parseFloat(it.commission) || 0,
         })),
@@ -206,7 +223,13 @@ const Sales = () => {
                   onChange={(name) => {
                     const prod = products.find(p => p.name.toLowerCase() === name.toLowerCase());
                     const items = [...form.items];
-                    items[idx] = { ...items[idx], productName: name, product: prod?._id || '' };
+                    items[idx] = {
+                      ...items[idx],
+                      productName: name,
+                      product: prod?._id || '',
+                      quantitySold: isAllItemsSelection(name) ? '1' : items[idx].quantitySold,
+                      pricePerKg: isAllItemsSelection(name) ? '' : items[idx].pricePerKg,
+                    };
                     setForm({ ...form, items });
                   }}
                 />
@@ -214,12 +237,15 @@ const Sales = () => {
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Qty (kg)</label>
                     <input type="number" step="0.01" value={item.quantitySold} onChange={(e) => updateItem(idx, 'quantitySold', e.target.value)}
-                      placeholder="0" className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent outline-none text-sm" />
+                      placeholder={isAllItemsSelection(item.productName) ? 'Auto: 1' : '0'}
+                      disabled={isAllItemsSelection(item.productName)}
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent outline-none text-sm disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Price/kg (৳)</label>
+                    <label className="block text-xs text-slate-500 mb-1">{isAllItemsSelection(item.productName) ? 'Total Sale (৳)' : 'Price/kg (৳)'}</label>
                     <input type="number" step="0.01" value={item.pricePerKg} onChange={(e) => updateItem(idx, 'pricePerKg', e.target.value)}
-                      placeholder="0" className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent outline-none text-sm" />
+                      placeholder={isAllItemsSelection(item.productName) ? 'Enter total sale amount' : '0'}
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent outline-none text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Commission</label>
@@ -229,7 +255,7 @@ const Sales = () => {
                 </div>
                 <p className="text-right text-xs text-slate-500">
                   Subtotal: <span className="font-bold text-slate-700">
-                    ৳{((parseFloat(item.quantitySold) || 0) * (parseFloat(item.pricePerKg) || 0) - (parseFloat(item.commission) || 0)).toLocaleString()}
+                    ৳{itemSubtotal(item).toLocaleString()}
                   </span>
                 </p>
               </div>
@@ -309,14 +335,16 @@ const Sales = () => {
                   <div key={i} className="grid grid-cols-3 gap-3 text-center">
                     <div className="bg-slate-50 rounded-xl p-2.5">
                       <p className="text-xs text-slate-400">{it.productName}</p>
-                      <p className="text-base font-bold text-slate-700">{it.quantitySold} kg</p>
+                      <p className="text-base font-bold text-slate-700">
+                        {isAllItemsSelection(it.productName) ? 'Combined Sale' : `${it.quantitySold} kg`}
+                      </p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-xs text-slate-400">Price/kg</p>
+                      <p className="text-xs text-slate-400">{isAllItemsSelection(it.productName) ? 'Total Sale' : 'Price/kg'}</p>
                       <p className="text-base font-bold text-slate-700">৳{it.pricePerKg}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-xs text-slate-400">Subtotal</p>
+                      <p className="text-xs text-slate-400">{isAllItemsSelection(it.productName) ? 'Net After Commission' : 'Subtotal'}</p>
                       <p className="text-base font-bold text-slate-700">৳{it.itemTotal?.toLocaleString()}</p>
                     </div>
                   </div>

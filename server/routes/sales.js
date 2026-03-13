@@ -5,6 +5,8 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+const isAllItemsSelection = (name = '') => /^all items?$/i.test(name.trim());
+
 // GET all sales (with optional date/product filter)
 router.get('/', auth, async (req, res, next) => {
   try {
@@ -55,7 +57,9 @@ router.post('/', auth, async (req, res, next) => {
     const resolvedItems = [];
     for (const item of items) {
       let productId = item.product || null;
-      if (!productId && item.productName) {
+      if (isAllItemsSelection(item.productName)) {
+        productId = null;
+      } else if (!productId && item.productName) {
         const escaped = item.productName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         let prod = await Product.findOne({ name: { $regex: `^${escaped}$`, $options: 'i' } });
         if (!prod) {
@@ -85,7 +89,9 @@ router.put('/:id', auth, async (req, res, next) => {
       const resolvedItems = [];
       for (const item of items) {
         let productId = item.product || null;
-        if (!productId && item.productName) {
+        if (isAllItemsSelection(item.productName)) {
+          productId = null;
+        } else if (!productId && item.productName) {
           const escaped = item.productName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           let prod = await Product.findOne({ name: { $regex: `^${escaped}$`, $options: 'i' } });
           if (!prod) {
