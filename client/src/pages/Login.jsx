@@ -97,10 +97,6 @@ const Login = () => {
             ) : 'Sign In'}
           </button>
         </form>
-
-        <p className="text-center text-ocean-300 text-xs mt-6">
-          Default: admin@fishbusiness.com / admin123
-        </p>
       </div>
     </div>
   );
