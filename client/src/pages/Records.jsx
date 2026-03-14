@@ -15,7 +15,7 @@ const Records = () => {
   const [activeTab, setActiveTab] = useState('all');
 
   const { admin } = useAuth();
-  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
+  const canEditDelete = admin?.name === 'Tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchData(); }, []);
 

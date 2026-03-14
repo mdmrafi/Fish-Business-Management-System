@@ -65,7 +65,7 @@ const Purchases = () => {
   const [customAmount, setCustomAmount] = useState('');
 
   const { admin } = useAuth();
-  const canEditDelete = admin?.name === 'tansir' && admin?.email === 'tansir@fishbusiness.com';
+  const canEditDelete = admin?.name === 'Tansir' && admin?.email === 'tansir@fishbusiness.com';
 
   useEffect(() => { fetchData(); }, []);
 
